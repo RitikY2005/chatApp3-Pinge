@@ -19,12 +19,13 @@ import { useState, useEffect } from 'react';
 import axiosInstance from '@/utils/axiosInstance.js';
 import { ALL_CONTACTS_ROUTES } from '@/constants/routes.constants.js';
 import useMessagesStore from '@/slices/messages.slice.js';
+import { useToast } from '@/hooks/use-toast.js';
 
 function NewDM() {
 	const { setSelectedChatData, setSelectedChatType } = useMessagesStore();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [showContactModal, setShowContactModal] = useState(false);
-
+	const { toast } = useToast();
 	const [matchedContacts, setMatchedContacts] = useState([]);
 
 	async function fetchContacts() {
@@ -106,7 +107,7 @@ function NewDM() {
 						/>
 
 						{matchedContacts.length > 0 ? (
-							<ScrollArea className="h-48">
+							<ScrollArea className="h-48 scrollbar-hidden">
 								{matchedContacts.map((contact) => {
 									return (
 										<div
@@ -114,7 +115,7 @@ function NewDM() {
 											onClick={() =>
 												handleClickNewContact(contact)
 											}
-											className="flex gap-2 items-center cursor-pointer hover:bg-background p-2 rounded-sm"
+											className="scrollbar-hidden flex gap-2 items-center cursor-pointer hover:bg-background p-2 rounded-sm"
 										>
 											<Avatar className="w-12 h-12">
 												<AvatarImage

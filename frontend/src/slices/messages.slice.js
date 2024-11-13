@@ -5,9 +5,8 @@ const useMessagesStore = create((set, get) => ({
 	selectedChatType: '',
 	selectedChatMessages: [],
 	setSelectedChatData: (selectedChatData) => set({ selectedChatData }),
-	setSelectedChatMessages: (message) => {
-		selectedChatMessages.push(message);
-	},
+	setSelectedChatMessages: (message) =>
+		set({ selectedChatMessages: [...get().selectedChatMessages, message] }),
 	setSelectedChatType: (selectedChatType) => set({ selectedChatType }),
 
 	closeChat: () =>

@@ -1,5 +1,5 @@
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
+export const NODE_ENV = import.meta.env.VITE_NODE_ENV;
 export const AUTH_ROUTES = `api/v1/users`;
 export const REGISTER_ROUTE = `${BACKEND_URL}/${AUTH_ROUTES}/register`;
 export const LOGIN_ROUTE = `${BACKEND_URL}/${AUTH_ROUTES}/login`;
