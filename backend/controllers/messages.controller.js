@@ -2,6 +2,8 @@ import asyncHandler from '../middlewares/asyncHandler.js';
 import CustomError from '../utils/CustomError.js';
 import cloudinary from 'cloudinary';
 import fs from 'fs/promises';
+import Users from '../models/users.model.js';
+import Messages from '../models/messages.model.js';
 
 export const uploadMessageFile = asyncHandler(async (req, res, next) => {
 	const finalData = {};
@@ -35,5 +37,34 @@ export const uploadMessageFile = asyncHandler(async (req, res, next) => {
 		success: true,
 		message: 'File uploaded successfully!',
 		finalData,
+	});
+});
+
+export const fetchDMChatHistory = asyncHandler(async (req, res, next) => {
+	const { user1, user2 } = req.body;
+
+	console.log('messages histroy->', req.body);
+	if (!user1 || !user2) {
+		return next(new CustomError('Both users are required!', 400));
+	}
+
+	const user1Exist = await Users.findById(user1);
+	const user2Exist = await Users.findById(user2);
+
+	if (!user1Exist || !user2Exist) {
+		return next(new CustomError('One of the users is invalid!', 400));
+	}
+
+	const messages = await Messages.find({
+		$or: [
+			{ $and: [{ sender: user1 }, { receiver: user2 }] },
+			{ $and: [{ sender: user2 }, { receiver: user1 }] },
+		],
+	}).exec();
+
+	res.status(200).json({
+		success: true,
+		message: 'Chat histroy of two users!',
+		messages,
 	});
 });
