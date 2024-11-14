@@ -12,3 +12,4 @@ export const ALL_CONTACTS_ROUTES = `${BACKEND_URL}/${CONTACT_ROUTES}/all-contact
 
 export const MESSAGES_ROUTES = `api/v1/messages`;
 export const SEND_FILE_ROUTE = `${BACKEND_URL}/${MESSAGES_ROUTES}/upload-file`;
+export const CHAT_HISTORY_ROUTE = `${BACKEND_URL}/${MESSAGES_ROUTES}/dm-chat-history`;

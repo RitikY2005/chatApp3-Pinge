@@ -8,9 +8,16 @@ import { IoMdDownload } from 'react-icons/io';
 import { FaPlus } from 'react-icons/fa';
 import axiosInstance from '@/utils/axiosInstance.js';
 import { useToast } from '@/hooks/use-toast.js';
+import { Progress } from '@/components/ui/progress';
+
 function ChatBody() {
 	const socketIo = useSocket();
-	const { selectedChatMessages, selectedChatType } = useMessagesStore();
+	const {
+		selectedChatMessages,
+		selectedChatType,
+		isDownloading,
+		setIsDownloading,
+	} = useMessagesStore();
 	const { userInfo } = useAppStore();
 	const scrollToLastRef = useRef();
 	const [fullImageURl, setFullImageURl] = useState('');
@@ -54,6 +61,12 @@ function ChatBody() {
 			const res = await axiosInstance.get(filePath, {
 				withCredentials: false,
 				responseType: 'blob',
+				onDownloadProgress: (progressEvent) =>
+					setIsDownloading(
+						Math.round(
+							(progressEvent.loaded * 100) / progressEvent.total
+						)
+					),
 			});
 			const blob = new Blob([res?.data]);
 			const link = document.createElement('a');
@@ -82,11 +95,18 @@ function ChatBody() {
 						<IoMdDownload
 							className="cursor-pointer"
 							onClick={() => downloadFile(imageUrl)}
+							disabled={isDownloading > 0 ? true : false}
 						/>
 						<FaPlus
 							className="cursor-pointer rotate-45"
-							onClick={() => setFullImageURl('')}
+							onClick={() => {
+								setFullImageURl('');
+								setIsDownloading(0);
+							}}
 						/>
+					</div>
+					<div>
+						<Progress value={isDownloading} />
 					</div>
 					<div>
 						<img
@@ -161,7 +181,6 @@ function ChatBody() {
 	useEffect(() => {
 		// scroll to the last of div
 		scrollToLastRef.current.scrollIntoView({ behavior: 'smooth' });
-		console.warn('file messages->', selectedChatMessages);
 	}, [selectedChatMessages]);
 
 	return (

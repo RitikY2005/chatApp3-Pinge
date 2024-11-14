@@ -17,11 +17,13 @@ import {
 import { SEND_FILE_ROUTE } from '@/constants/routes.constants.js';
 import { useToast } from '@/hooks/use-toast.js';
 import axiosInstance from '@/utils/axiosInstance.js';
+import { Progress } from '@/components/ui/progress';
 
 function ChatFooter() {
 	const socketIo = useSocket();
 	const { userInfo } = useAppStore();
-	const { selectedChatData } = useMessagesStore();
+	const { selectedChatData, isUploading, setIsUploading } =
+		useMessagesStore();
 	const [messageInput, setMessageInput] = useState('');
 	const [fileInput, setFileInput] = useState('');
 	const [filePreview, setFilePreview] = useState('');
@@ -62,7 +64,7 @@ function ChatFooter() {
 
 	function sendFileMessage(fileData) {
 		if (!fileData || !fileData.secure_url) return;
-		console.log('uploaded->>', fileData);
+
 		const data = {
 			sender: userInfo._id,
 			receiver: selectedChatData._id,
@@ -135,7 +137,14 @@ function ChatFooter() {
 		data.append('file', fileInput);
 
 		try {
-			const res = await axiosInstance.post(SEND_FILE_ROUTE, data);
+			const res = await axiosInstance.post(SEND_FILE_ROUTE, data, {
+				onUploadProgress: (progressEvent) =>
+					setIsUploading(
+						Math.round(
+							(progressEvent.loaded * 100) / progressEvent.total
+						)
+					),
+			});
 
 			if (res?.data?.success) {
 				sendFileMessage(res?.data?.finalData);
@@ -149,6 +158,7 @@ function ChatFooter() {
 		}
 
 		setShowFileDialog(false);
+		setIsUploading(0);
 		setFileInput('');
 		setFilePreview('');
 		setFileIsImage(false);
@@ -215,7 +225,7 @@ function ChatFooter() {
 			{/*this is not part of static ui -> send file dialog*/}
 			<Dialog open={showFileDialog} onOpenChange={setShowFileDialog}>
 				<DialogTrigger></DialogTrigger>
-				<DialogContent className="rounded-sm w-96 sm:w-auto">
+				<DialogContent className="rounded-sm w-96">
 					<DialogHeader>
 						<DialogTitle>Do you want to send this ?</DialogTitle>
 						<DialogDescription>
@@ -231,6 +241,12 @@ function ChatFooter() {
 										{filePreview}
 									</span>
 								)}
+
+								{isUploading > 0 && (
+									<span className="w-full">
+										<Progress value={isUploading} />
+									</span>
+								)}
 								<span className="flex items-center justify-center gap-3">
 									<button
 										onClick={handleCancelSendFile}
@@ -240,6 +256,9 @@ function ChatFooter() {
 									</button>
 									<button
 										onClick={handleSendFile}
+										disabled={
+											isUploading > 0 ? true : false
+										}
 										className="border border-accent bg-accent text-primary-foreground  rounded-lg py-2 px-4 text-md font-semibold transition-all duration-300 ease-in-out"
 									>
 										send
