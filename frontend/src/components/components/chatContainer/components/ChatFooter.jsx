@@ -6,14 +6,30 @@ import EmojiPicker from 'emoji-picker-react';
 import { useSocket } from '@/socketContext.jsx';
 import useAppStore from '@/slices/user.slice.js';
 import useMessagesStore from '@/slices/messages.slice.js';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
+import { SEND_FILE_ROUTE } from '@/constants/routes.constants.js';
+import { useToast } from '@/hooks/use-toast.js';
+import axiosInstance from '@/utils/axiosInstance.js';
 
 function ChatFooter() {
 	const socketIo = useSocket();
 	const { userInfo } = useAppStore();
 	const { selectedChatData } = useMessagesStore();
 	const [messageInput, setMessageInput] = useState('');
+	const [fileInput, setFileInput] = useState('');
+	const [filePreview, setFilePreview] = useState('');
+	const [fileIsImage, setFileIsImage] = useState(false);
+	const [showFileDialog, setShowFileDialog] = useState(false);
 	const emojiRef = useRef();
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+	const { toast } = useToast();
 
 	function handleInputChange(e) {
 		const { name, value } = e.target;
@@ -44,11 +60,98 @@ function ChatFooter() {
 		setMessageInput('');
 	}
 
+	function sendFileMessage(fileData) {
+		if (!fileData || !fileData.secure_url) return;
+		console.log('uploaded->>', fileData);
+		const data = {
+			sender: userInfo._id,
+			receiver: selectedChatData._id,
+			message: '',
+			messageType: 'file',
+			file: {
+				public_id: fileData?.public_id,
+				secure_url: fileData.secure_url,
+			},
+		};
+
+		socketIo.emit('directMessage', data);
+	}
+
 	function handlePressEnter(e) {
 		const { key } = e;
 		if (key === 'Enter') {
 			sendDirectMessage();
 		}
+	}
+
+	function handleFileChange(e) {
+		const file = e.target.files[0];
+		if (file) {
+			const fileExt = file.name.split('.').pop();
+			const isImage = new RegExp(
+				/^(jpg|jpeg|png|gif|bmp|tiff|webp|avif|svg|heif|heic|ico)$/i
+			);
+
+			if (isImage.test(fileExt)) {
+				const reader = new FileReader();
+				reader.readAsDataURL(file);
+				reader.addEventListener('load', () => {
+					setFileInput(file);
+					setFilePreview(reader.result);
+					setFileIsImage(true);
+				});
+			} else {
+				setFileInput(file);
+				setFilePreview(file.name);
+				setFileIsImage(false);
+			}
+			setShowFileDialog(true);
+		} else {
+			setFileInput('');
+			setFilePreview('');
+			setFileIsImage(false);
+		}
+		e.target.value = null;
+	}
+
+	function handleCancelSendFile() {
+		setShowFileDialog(false);
+		setFileInput('');
+		setFilePreview('');
+		setFileIsImage(false);
+	}
+
+	async function handleSendFile() {
+		if (!fileInput) {
+			toast({
+				variant: 'destructive',
+				title: 'Something went wrong!',
+				description: 'Please select a file',
+			});
+			return;
+		}
+
+		const data = new FormData();
+		data.append('file', fileInput);
+
+		try {
+			const res = await axiosInstance.post(SEND_FILE_ROUTE, data);
+
+			if (res?.data?.success) {
+				sendFileMessage(res?.data?.finalData);
+			}
+		} catch (e) {
+			toast({
+				variant: 'destructive',
+				title: 'Something went wrong!',
+				description: e?.response?.data?.message,
+			});
+		}
+
+		setShowFileDialog(false);
+		setFileInput('');
+		setFilePreview('');
+		setFileIsImage(false);
 	}
 
 	useEffect(() => {
@@ -71,7 +174,16 @@ function ChatFooter() {
 					name="message"
 					className="flex-1 py-3 rounded-md px-3  outline-none"
 				/>
-				<FiPaperclip className="text-2xl cursor-pointer font-bold" />
+				<label htmlFor="file">
+					<FiPaperclip className="text-2xl cursor-pointer font-bold" />
+					<input
+						type="file"
+						name="file"
+						id="file"
+						className="hidden"
+						onChange={handleFileChange}
+					/>
+				</label>
 				<RiEmojiStickerLine
 					className="text-2xl cursor-pointer font-bold"
 					onClick={() => setShowEmojiPicker((prev) => !prev)}
@@ -99,6 +211,46 @@ function ChatFooter() {
 			>
 				<IoSend />
 			</div>
+
+			{/*this is not part of static ui -> send file dialog*/}
+			<Dialog open={showFileDialog} onOpenChange={setShowFileDialog}>
+				<DialogTrigger></DialogTrigger>
+				<DialogContent className="rounded-sm w-96 sm:w-auto">
+					<DialogHeader>
+						<DialogTitle>Do you want to send this ?</DialogTitle>
+						<DialogDescription>
+							<span className="flex flex-col items-center justify-center p-3 gap-3">
+								{fileIsImage ? (
+									<img
+										src={filePreview}
+										alt="file preview"
+										className="w-48 drop-shadow-md"
+									/>
+								) : (
+									<span className="bg-primary text-primary-foreground p-1 rounded-md">
+										{filePreview}
+									</span>
+								)}
+								<span className="flex items-center justify-center gap-3">
+									<button
+										onClick={handleCancelSendFile}
+										className="border border-destructive bg-destructive text-primary-foreground  rounded-lg py-2 px-4 text-md font-semibold transition-all duration-300 ease-in-out"
+									>
+										cancel
+									</button>
+									<button
+										onClick={handleSendFile}
+										className="border border-accent bg-accent text-primary-foreground  rounded-lg py-2 px-4 text-md font-semibold transition-all duration-300 ease-in-out"
+									>
+										send
+									</button>
+								</span>
+							</span>
+						</DialogDescription>
+					</DialogHeader>
+				</DialogContent>
+			</Dialog>
+			{/*till here is not part of ui */}
 		</div>
 	);
 }

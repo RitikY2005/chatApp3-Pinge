@@ -41,7 +41,7 @@ function ContactsContainer() {
 
 	return (
 		<div
-			className={`w-full ${selectedChatData._id ? 'hidden sm:block' : ''} sm:w-[40%] md:w-[30%] h-full bg-background text-foreground border-r border-popover py-6 px-2 space-y-4`}
+			className={`w-full ${selectedChatData._id ? 'hidden sm:block' : ''} sm:w-[40%] md:w-[30%] h-full bg-background text-foreground border-r border-popover py-6 px-2 space-y-4 relative`}
 		>
 			<div className="w-full flex items-center justify-start mb-5">
 				<ShowLogo />

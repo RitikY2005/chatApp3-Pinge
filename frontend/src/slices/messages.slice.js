@@ -5,9 +5,23 @@ const useMessagesStore = create((set, get) => ({
 	selectedChatType: '',
 	selectedChatMessages: [],
 	setSelectedChatData: (selectedChatData) => set({ selectedChatData }),
-	// TODO:>> fix mutiple people sending message to one user in dm type message
-	setSelectedChatMessages: (message) =>
-		set({ selectedChatMessages: [...get().selectedChatMessages, message] }),
+	setSelectedChatMessages: (message) => {
+		const { selectedChatData, selectedChatType, selectedChatMessages } =
+			get();
+		if (selectedChatType === 'contact' && selectedChatData._id) {
+			if (
+				selectedChatData._id.toString() === message.sender ||
+				selectedChatData._id.toString() === message.receiver
+			) {
+				set({
+					selectedChatMessages: [...selectedChatMessages, message],
+				});
+			}
+		} else if (selectedChatType === 'channel' && selectedChatData._id) {
+			// TODO -> hanlde messages for channel
+		}
+	},
+
 	setSelectedChatType: (selectedChatType) => set({ selectedChatType }),
 
 	closeChat: () =>
