@@ -9,6 +9,7 @@ import { FaPlus } from 'react-icons/fa';
 import axiosInstance from '@/utils/axiosInstance.js';
 import { useToast } from '@/hooks/use-toast.js';
 import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 function ChatBody() {
 	const socketIo = useSocket();
@@ -40,6 +41,8 @@ function ChatBody() {
 
 					{selectedChatType === 'contact' &&
 						reanderDMMessages(message)}
+					{selectedChatType === 'channel' &&
+						renderChannelMessages(message)}
 				</div>
 			);
 		});
@@ -178,9 +181,103 @@ function ChatBody() {
 		);
 	}
 
+	function renderChannelMessages(message) {
+		return (
+			<div
+				className={`w-full px-3 flex flex-col gap-1 justify-center ${userInfo._id !== message.sender._id ? 'items-start' : 'items-end'}`}
+			>
+				{message.messageType === 'text' && (
+					<div
+						className={`${userInfo._id !== message.sender._id ? 'bg-secondary text-secondary-foreground rounded-bl-none ml-6' : 'bg-primary text-primary-foreground rounded-br-none mr-6'} border rounded-xl p-2 max-w-[50%] drop-shadow-sm`}
+					>
+						{message.message}
+					</div>
+				)}
+
+				{message.messageType === 'file' && (
+					<div
+						className={`${userInfo._id !== message.sender._id ? 'bg-secondary text-secondary-foreground rounded-bl-none ml-6' : 'bg-primary text-primary-foreground rounded-br-none mr-6'} border rounded-xl p-2 max-w-[50%] break-words drop-shadow-sm`}
+					>
+						{isTheFileImage(message.file.secure_url) ? (
+							<>
+								<img
+									src={message.file.secure_url}
+									alt="image"
+									className="w-32 h-32 rounded-md cursor-pointer"
+									onClick={() =>
+										setFullImageURl(message.file.secure_url)
+									}
+								/>
+							</>
+						) : (
+							<div
+								onClick={() =>
+									downloadFile(message.file.secure_url)
+								}
+								className="w-full break-words flex items-center justify-center gap-1 hover:underline flex-wrap cursor-pointer"
+							>
+								<span className="flex">
+									<FaFileZipper className="inline" />
+									<span>
+										{message.file.secure_url
+											?.split('/')
+											.pop()}
+									</span>
+								</span>
+
+								<span>
+									<IoMdDownload className="text-3xl" />
+								</span>
+							</div>
+						)}
+					</div>
+				)}
+
+				<div
+					className={`flex ${userInfo._id !== message.sender._id ? '' : 'flex-row-reverse'} items-center justify-start gap-2`}
+				>
+					<Avatar className="w-8 h-8">
+						<AvatarImage
+							src={message?.sender?.avatar?.secure_url}
+						/>
+
+						<AvatarFallback
+							className={`text-lg text-white font-semibold`}
+							style={{
+								backgroundColor:
+									message.sender?.colorPreference,
+							}}
+						>
+							{message.sender?.email
+								.toString()
+								.split('')
+								.shift()
+								.toUpperCase()}
+						</AvatarFallback>
+					</Avatar>
+
+					<div
+						className="text-sm font-bold"
+						style={{ color: message.sender.colorPreference }}
+					>
+						~
+						{message?.sender?.firstName
+							? `${message.sender.firstName} ${message.sender?.lastName}`
+							: `${message.sender.email}`}
+					</div>
+				</div>
+
+				<div className="text-xs text-muted-foreground">
+					{moment(message.timestamps).format('LT')}
+				</div>
+			</div>
+		);
+	}
+
 	useEffect(() => {
 		// scroll to the last of div
 		scrollToLastRef.current.scrollIntoView({ behavior: 'smooth' });
+		console.log('messages->>', selectedChatMessages);
 	}, [selectedChatMessages]);
 
 	return (

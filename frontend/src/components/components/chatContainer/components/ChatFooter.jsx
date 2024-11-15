@@ -22,7 +22,7 @@ import { Progress } from '@/components/ui/progress';
 function ChatFooter() {
 	const socketIo = useSocket();
 	const { userInfo } = useAppStore();
-	const { selectedChatData, isUploading, setIsUploading } =
+	const { selectedChatData, selectedChatType, isUploading, setIsUploading } =
 		useMessagesStore();
 	const [messageInput, setMessageInput] = useState('');
 	const [fileInput, setFileInput] = useState('');
@@ -47,7 +47,24 @@ function ChatFooter() {
 		}
 	}
 
+	function sendChannelMessage() {
+		if (!messageInput) return;
+
+		const data = {
+			sender: userInfo._id,
+			admin: selectedChatData.admin.toString(),
+			participants: selectedChatData.participants,
+			message: messageInput,
+			messageType: 'text',
+		};
+
+		socketIo.emit('channelMessage', data);
+
+		setMessageInput('');
+	}
+
 	function sendDirectMessage() {
+		if (selectedChatType === 'channel') return sendChannelMessage();
 		if (!messageInput) return;
 
 		const data = {
@@ -65,18 +82,34 @@ function ChatFooter() {
 	function sendFileMessage(fileData) {
 		if (!fileData || !fileData.secure_url) return;
 
-		const data = {
-			sender: userInfo._id,
-			receiver: selectedChatData._id,
-			message: '',
-			messageType: 'file',
-			file: {
-				public_id: fileData?.public_id,
-				secure_url: fileData.secure_url,
-			},
-		};
+		if (selectedChatType === 'contact') {
+			const data = {
+				sender: userInfo._id,
+				receiver: selectedChatData._id,
+				message: '',
+				messageType: 'file',
+				file: {
+					public_id: fileData?.public_id,
+					secure_url: fileData.secure_url,
+				},
+			};
 
-		socketIo.emit('directMessage', data);
+			socketIo.emit('directMessage', data);
+		} else {
+			const data = {
+				admin: selectedChatData.admin.toString(),
+				participants: selectedChatData.participants,
+				sender: userInfo._id,
+				message: '',
+				messageType: 'file',
+				file: {
+					public_id: fileData?.public_id,
+					secure_url: fileData.secure_url,
+				},
+			};
+
+			socketIo.emit('channelMessage', data);
+		}
 	}
 
 	function handlePressEnter(e) {

@@ -108,3 +108,52 @@ export const fetchMyContacts = asyncHandler(async (req, res, next) => {
 		return next(new CustomError('Could not fetch contacts', 500));
 	}
 });
+
+export const fetchAllUsersForChannel = asyncHandler(async (req, res, next) => {
+	const { id } = req.user;
+	const userId = new mongoose.Types.ObjectId(id);
+
+	try {
+		const users = await Users.aggregate([
+			{ $match: { _id: { $ne: userId } } },
+			{
+				$addFields: {
+					value: '$_id',
+					label: {
+						$cond: {
+							if: {
+								$and: [
+									{
+										$ne: [
+											{ $type: '$firstName' },
+											'missing',
+										],
+									}, // Check if firstName exists
+									{ $ne: ['$firstName', ''] }, // Ensure firstName is not an empty string
+								],
+							},
+							then: {
+								$concat: [
+									'$firstName',
+									' ',
+									{ $ifNull: ['$lastName', ''] },
+								],
+							},
+							else: { $ifNull: ['$email', 'No Email'] }, // Fallback to email if firstName is missing or empty
+						},
+					},
+				},
+			},
+			{ $project: { value: 1, label: 1 } }, // Only include value and label fields
+		]).exec();
+
+		res.status(200).json({
+			success: true,
+			message: 'fetched all users.',
+			users,
+		});
+	} catch (e) {
+		console.log(e);
+		return next(new CustomError('Could not find Users!', 404));
+	}
+});

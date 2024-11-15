@@ -1,6 +1,7 @@
 import ShowLogo from '../ShowLogo.jsx';
 import { FaPlus } from 'react-icons/fa';
 import NewDM from './components/NewDM.jsx';
+import NewChannel from './components/NewChannel.jsx';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import useMessagesStore from '@/slices/messages.slice.js';
 import useAppStore from '@/slices/user.slice.js';
@@ -27,6 +28,7 @@ function ContactsContainer() {
 		setSelectedChatData,
 		setSelectedChatType,
 		closeChat,
+		myChannels,
 	} = useMessagesStore();
 	const navigate = useNavigate();
 	const { userInfo, setUserInfo } = useAppStore();
@@ -54,9 +56,15 @@ function ContactsContainer() {
 		setSelectedChatType('contact');
 	}
 
-	useEffect(() => {
-		console.warn('contacts->>', myContacts);
-	}, [myContacts]);
+	function handleClickNewChannel(channel) {
+		const refindedChannel = {
+			_id: channel._id,
+			...channel.channelInfo,
+		};
+
+		setSelectedChatData(refindedChannel);
+		setSelectedChatType('channel');
+	}
 
 	return (
 		<div
@@ -132,9 +140,42 @@ function ContactsContainer() {
 			<div className="font-mono text-lg tracking-wider flex justify-between items-center px-3 flex-nowrap text-gray-600">
 				<p className="break-keep flex-1 whitespace-nowrap">CHANNELS</p>
 				<div className="cursor-pointer hover:text-gray-400 transition-all ease-in-out duration-300">
-					<FaPlus />
+					<NewChannel />
 				</div>
 			</div>
+
+			{myChannels.length > 0 && (
+				<ScrollArea className="max-h-[35vh] overflow-y-scroll w-full bg-popover text-popover-foreground rounded-md p-4 scrollbar-hidden">
+					{myChannels.map((channel) => {
+						return (
+							<div
+								key={channel._id}
+								onClick={() => handleClickNewChannel(channel)}
+								className="scrollbar-hidden flex gap-2 items-center cursor-pointer hover:bg-background p-2 rounded-sm"
+							>
+								<Avatar className="w-12 h-12">
+									<AvatarImage src={''} />
+
+									<AvatarFallback
+										className={`text-lg text-white font-semibold`}
+									>
+										#
+									</AvatarFallback>
+								</Avatar>
+
+								<div className="flex flex-col">
+									<span className="text-md font-semibold ">
+										{channel.channelInfo.title}
+									</span>
+									<span className="text-sm text-secondary-foreground">
+										{channel?.latestMessage?.message}
+									</span>
+								</div>
+							</div>
+						);
+					})}
+				</ScrollArea>
+			)}
 
 			<div className="absolute left-0 bottom-0 w-full bg-popover text-popover-foreground flex justify-between items-center px-4">
 				<div className="flex gap-3 items-center cursor-pointer  p-2 ">

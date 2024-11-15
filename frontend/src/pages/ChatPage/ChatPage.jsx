@@ -6,7 +6,10 @@ import { useSocket } from '@/socketContext.jsx';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast.js';
 import axiosInstance from '@/utils/axiosInstance.js';
-import { MY_CONTACTS_ROUTE } from '@/constants/routes.constants.js';
+import {
+	MY_CONTACTS_ROUTE,
+	MY_CHANNELS_ROUTE,
+} from '@/constants/routes.constants.js';
 
 const ChatPage = () => {
 	const socketIo = useSocket();
@@ -15,6 +18,9 @@ const ChatPage = () => {
 		selectedChatMessages,
 		setSelectedChatMessages,
 		setMyContacts,
+		setMyChannels,
+		unknownUser,
+		unknownChannel,
 	} = useMessagesStore();
 	const { toast } = useToast();
 
@@ -23,8 +29,25 @@ const ChatPage = () => {
 			const res = await axiosInstance.get(MY_CONTACTS_ROUTE);
 
 			if (res?.data?.success) {
-				console.warn('mycontacts res->>', res?.data?.contacts);
 				setMyContacts(res?.data?.contacts);
+			}
+		} catch (e) {
+			toast({
+				variant: 'destructive',
+				title: 'Something went wrong!',
+				description: e?.response?.data?.message,
+			});
+		}
+	}
+
+	async function fetchMyChannels() {
+		try {
+			const res = await axiosInstance.get(MY_CHANNELS_ROUTE);
+
+			if (res?.data?.success) {
+				console.warn('myChannels res->>', res?.data?.channels);
+
+				setMyChannels(res?.data?.channels);
 			}
 		} catch (e) {
 			toast({
@@ -72,19 +95,36 @@ const ChatPage = () => {
 	useEffect(() => {
 		function handleDirectMessageResponse(message) {
 			setSelectedChatMessages(message);
-			fetchMyContacts();
+		}
+
+		function handleChannelMessageResponse(message) {
+			console.log('channel message->>', message);
+			setSelectedChatMessages(message);
 		}
 
 		socketIo.on('directMessageResponse', handleDirectMessageResponse);
+		socketIo.on('channelMessageResponse', handleChannelMessageResponse);
 
 		return () => {
 			socketIo.off('directMessageResponse', handleDirectMessageResponse);
+			socketIo.off(
+				'channelMessageResponse',
+				handleChannelMessageResponse
+			);
 		};
 	}, []);
 
 	useEffect(() => {
 		fetchMyContacts();
-	}, []);
+	}, [unknownUser]);
+
+	useEffect(() => {
+		fetchMyChannels();
+	}, [unknownChannel]);
+
+	useEffect(() => {
+		console.warn('chanel chat messages->>', selectedChatMessages);
+	}, [selectedChatMessages]);
 
 	return (
 		<div className="w-screen h-screen flex">

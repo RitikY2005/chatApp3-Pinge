@@ -1,4 +1,5 @@
 import Messages from '../models/messages.model.js';
+import Channels from '../models/channels.model.js';
 
 const connectedUsers = new Map();
 
@@ -35,6 +36,57 @@ const handleDirectMessage = async (io, socket, msg) => {
 	}
 };
 
+const handleChannelMessage = async (io, socket, msg) => {
+	const { admin, sender, message, messageType, file, participants } = msg;
+	if (!admin || !sender || !messageType) {
+		return socket.emit(
+			'custom_error',
+			'sender,receiver,message type are required!'
+		);
+	}
+
+	try {
+		const newMessage = await Messages.create({
+			sender,
+			message,
+			messageType,
+			file,
+		});
+
+		const channel = await Channels.updateOne(
+			{ admin },
+			{ $push: { messages: newMessage._id } }
+		);
+
+		if (!channel) {
+			return socket.emit('custom_error', 'Channel was not found!');
+		}
+
+		const finalMessage = await Messages.findById(newMessage._id).populate(
+			'sender'
+		);
+		// see if admin is online and emit the event to him , he won't be in participants array
+		const adminSocketId = connectedUsers.get(admin);
+		if (adminSocketId) {
+			io.to(adminSocketId).emit('channelMessageResponse', finalMessage);
+		}
+
+		// whoever is online among participants , emit the message to them
+		participants.map((participant) => {
+			const participantSocket = connectedUsers.get(participant);
+			if (participantSocket) {
+				io.to(participantSocket).emit(
+					'channelMessageResponse',
+					finalMessage
+				);
+			}
+		});
+	} catch (e) {
+		console.log('channelerror->>', e);
+		return socket.emit('custom_error', 'could not save the message!');
+	}
+};
+
 export default function socketRoutes(io, socket) {
 	console.log(`client conected with socket id:${socket.id}`);
 
@@ -50,6 +102,10 @@ export default function socketRoutes(io, socket) {
 
 	socket.on('directMessage', (message) =>
 		handleDirectMessage(io, socket, message)
+	);
+
+	socket.on('channelMessage', (message) =>
+		handleChannelMessage(io, socket, message)
 	);
 
 	socket.on('disconnect', () => {
