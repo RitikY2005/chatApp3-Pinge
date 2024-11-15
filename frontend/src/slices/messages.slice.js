@@ -6,6 +6,8 @@ const useMessagesStore = create((set, get) => ({
 	selectedChatMessages: [],
 	isUploading: 0,
 	isDownloading: 0,
+	myContacts: [],
+	setMyContacts: (myContacts) => set({ myContacts: [...myContacts] }),
 	setIsUploading: (isUploading) => set({ isUploading }),
 	setIsDownloading: (isDownloading) => set({ isDownloading }),
 	setSelectedChatData: (selectedChatData) => set({ selectedChatData }),
@@ -30,6 +32,8 @@ const useMessagesStore = create((set, get) => ({
 				set({
 					selectedChatMessages: [...selectedChatMessages, message],
 				});
+			} else {
+				// this user is not selected then , means we have to add this user to our contacts , which can be done by refreshing fetchMyContacts on chatpage
 			}
 		} else if (selectedChatType === 'channel' && selectedChatData._id) {
 			// TODO -> hanlde messages for channel
@@ -43,6 +47,8 @@ const useMessagesStore = create((set, get) => ({
 			selectedChatData: {},
 			selectedChatMessages: [],
 			selectedChatType: '',
+			isUploading: 0,
+			isDownloading: 0,
 		}),
 }));
 

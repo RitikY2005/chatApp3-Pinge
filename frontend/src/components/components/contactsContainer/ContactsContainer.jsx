@@ -12,13 +12,22 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { useNavigate } from 'react-router-dom';
 import { LOGOUT_ROUTE } from '@/constants/routes.constants.js';
 import { useToast } from '@/hooks/use-toast.js';
 import axiosInstance from '@/utils/axiosInstance.js';
+import { useEffect } from 'react';
 
 function ContactsContainer() {
-	const { selectedChatData } = useMessagesStore();
+	const {
+		selectedChatData,
+		myContacts,
+		setSelectedChatData,
+		setSelectedChatType,
+		closeChat,
+	} = useMessagesStore();
 	const navigate = useNavigate();
 	const { userInfo, setUserInfo } = useAppStore();
 	const { toast } = useToast();
@@ -29,6 +38,7 @@ function ContactsContainer() {
 
 			if (res?.data?.success) {
 				setUserInfo(undefined);
+				closeChat();
 			}
 		} catch (e) {
 			toast({
@@ -38,6 +48,15 @@ function ContactsContainer() {
 			});
 		}
 	}
+
+	function handleClickNewContact(contact) {
+		setSelectedChatData(contact);
+		setSelectedChatType('contact');
+	}
+
+	useEffect(() => {
+		console.warn('contacts->>', myContacts);
+	}, [myContacts]);
 
 	return (
 		<div
@@ -55,6 +74,60 @@ function ContactsContainer() {
 					<NewDM />
 				</div>
 			</div>
+
+			{myContacts.length > 0 && (
+				<ScrollArea className="max-h-[35vh] overflow-y-scroll w-full bg-popover text-popover-foreground rounded-md p-4 scrollbar-hidden">
+					{myContacts.map((contact) => {
+						return (
+							<div
+								key={contact.talkedWith._id}
+								onClick={() =>
+									handleClickNewContact(contact.talkedWith)
+								}
+								className="scrollbar-hidden flex gap-2 items-center cursor-pointer hover:bg-background p-2 rounded-sm"
+							>
+								<Avatar className="w-12 h-12">
+									<AvatarImage
+										src={
+											contact.talkedWith?.avatar
+												?.secure_url
+										}
+									/>
+
+									<AvatarFallback
+										className={`text-lg text-white font-semibold`}
+										style={{
+											backgroundColor:
+												contact.talkedWith
+													?.colorPreference,
+										}}
+									>
+										{contact.talkedWith?.email
+											.toString()
+											.split('')
+											.shift()
+											.toUpperCase()}
+									</AvatarFallback>
+								</Avatar>
+
+								<div className="flex flex-col">
+									<span className="text-md font-semibold ">
+										{contact.talkedWith.firstName
+											? `${contact.talkedWith?.firstName} ${contact?.talkedWith?.lastName}`
+											: contact.talkedWith?.email}
+									</span>
+									<span className="text-xs text-secondary-foreground">
+										{contact?.latestMessage?.messageType ===
+										'text'
+											? contact?.latestMessage?.message
+											: contact.talkedWith.email.toString()}
+									</span>
+								</div>
+							</div>
+						);
+					})}
+				</ScrollArea>
+			)}
 
 			<div className="font-mono text-lg tracking-wider flex justify-between items-center px-3 flex-nowrap text-gray-600">
 				<p className="break-keep flex-1 whitespace-nowrap">CHANNELS</p>

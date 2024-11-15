@@ -9,6 +9,7 @@ export const UPDATE_PROFILE_ROUTE = `${BACKEND_URL}/${AUTH_ROUTES}/update-profil
 
 export const CONTACT_ROUTES = `api/v1/contacts`;
 export const ALL_CONTACTS_ROUTES = `${BACKEND_URL}/${CONTACT_ROUTES}/all-contacts`;
+export const MY_CONTACTS_ROUTE = `${BACKEND_URL}/${CONTACT_ROUTES}/my-contacts`;
 
 export const MESSAGES_ROUTES = `api/v1/messages`;
 export const SEND_FILE_ROUTE = `${BACKEND_URL}/${MESSAGES_ROUTES}/upload-file`;
