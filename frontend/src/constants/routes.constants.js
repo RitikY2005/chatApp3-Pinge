@@ -19,3 +19,4 @@ export const CHAT_HISTORY_ROUTE = `${BACKEND_URL}/${MESSAGES_ROUTES}/dm-chat-his
 export const CHANNELS_ROUTES = `api/v1/channels`;
 export const CREATE_CHANNEL_ROUTE = `${BACKEND_URL}/${CHANNELS_ROUTES}/create-channel`;
 export const MY_CHANNELS_ROUTE = `${BACKEND_URL}/${CHANNELS_ROUTES}/my-channels`;
+export const CHANNEL_HISTORY_ROUTE = `${BACKEND_URL}/${CHANNELS_ROUTES}/channel-chat-history`;

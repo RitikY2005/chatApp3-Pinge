@@ -182,6 +182,8 @@ function ChatBody() {
 	}
 
 	function renderChannelMessages(message) {
+		console.log('-----this is channel messsage to be rendered----');
+		console.log(message);
 		return (
 			<div
 				className={`w-full px-3 flex flex-col gap-1 justify-center ${userInfo._id !== message.sender._id ? 'items-start' : 'items-end'}`}
@@ -248,8 +250,8 @@ function ChatBody() {
 									message.sender?.colorPreference,
 							}}
 						>
-							{message.sender?.email
-								.toString()
+							{message?.sender?.email
+								?.toString()
 								.split('')
 								.shift()
 								.toUpperCase()}

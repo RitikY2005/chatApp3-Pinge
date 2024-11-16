@@ -49,14 +49,7 @@ const useMessagesStore = create((set, get) => ({
 		} else if (selectedChatType === 'channel' && selectedChatData._id) {
 			// check if sender of the message is from the group selected
 
-			const isSenderParticipant = selectedChatData.participants.includes(
-				message.sender._id.toString()
-			);
-			const isSenderAdmin =
-				selectedChatData.admin.toString() ===
-				message.sender._id.toString();
-
-			if (isSenderParticipant || isSenderAdmin) {
+			if (message.channelId === selectedChatData._id) {
 				set({
 					selectedChatMessages: [...selectedChatMessages, message],
 				});
@@ -67,45 +60,37 @@ const useMessagesStore = create((set, get) => ({
 		}
 
 		// this one for always keeping the lastest chat on top in contacts and if the sender of message in not in contacts , raise unknownUserflag
-		if (selectedChatType === 'contact') {
-			// we want to make sure that this contact is at top in myContacts
-			const findIndex = myContacts.findIndex(
-				(contact) =>
-					contact.talkedWith._id.toString() === message.sender ||
-					contact.talkedWith._id.toString() === message.receiver
-			);
 
-			if (findIndex > -1) {
-				const backup = myContacts[findIndex];
-				backup.latestMessage = message;
-				myContacts.splice(findIndex, 1);
-				set({ myContacts: [backup, ...myContacts] });
-			} else {
-				set({ unknownUser: !unknownUser });
-			}
+		// we want to make sure that this contact is at top in myContacts
+		const findIndexContact = myContacts.findIndex(
+			(contact) =>
+				contact.talkedWith._id.toString() === message.sender ||
+				contact.talkedWith._id.toString() === message.receiver
+		);
+
+		if (findIndexContact > -1) {
+			const backup = myContacts[findIndexContact];
+			backup.latestMessage = message;
+			myContacts.splice(findIndexContact, 1);
+			set({ myContacts: [backup, ...myContacts] });
+		} else {
+			set({ unknownUser: !unknownUser });
 		}
 
 		// this one for always keeping the lastest chat on top in channel and if the sender of message in not in channels , raise unknownChannel flag
 
-		if (selectedChatType === 'channel') {
-			const findIndex = myChannels.findIndex(
-				(channel) =>
-					channel.channelInfo.admin.toString() ===
-						message.sender._id ||
-					channel.channelInfo.participants.includes(
-						message.sender._id.toString()
-					)
-			);
-			console.warn('indexfind,-->', findIndex);
-			if (findIndex > -1) {
-				console.error('entered here---');
-				const backup = myChannels[findIndex];
-				backup.latestMessage = message;
-				myChannels.splice(findIndex, 1);
-				set({ myChannels: [backup, ...myChannels] });
-			} else {
-				set({ unknownChannel: !unknownChannel });
-			}
+		const findIndexChannel = myChannels.findIndex(
+			(channel) => channel._id.toString() === message?.channelId
+		);
+
+		if (findIndexChannel > -1) {
+			console.error('entered here---');
+			const backup = myChannels[findIndexChannel];
+			backup.latestMessage = message;
+			myChannels.splice(findIndexChannel, 1);
+			set({ myChannels: [backup, ...myChannels] });
+		} else {
+			set({ unknownChannel: !unknownChannel });
 		}
 	},
 

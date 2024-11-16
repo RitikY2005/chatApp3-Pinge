@@ -27,6 +27,7 @@ function ContactsContainer() {
 		myContacts,
 		setSelectedChatData,
 		setSelectedChatType,
+		setSelectedChatMessages,
 		closeChat,
 		myChannels,
 	} = useMessagesStore();

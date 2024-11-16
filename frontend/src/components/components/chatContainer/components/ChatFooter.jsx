@@ -51,6 +51,7 @@ function ChatFooter() {
 		if (!messageInput) return;
 
 		const data = {
+			channelId: selectedChatData._id,
 			sender: userInfo._id,
 			admin: selectedChatData.admin.toString(),
 			participants: selectedChatData.participants,
@@ -97,6 +98,7 @@ function ChatFooter() {
 			socketIo.emit('directMessage', data);
 		} else {
 			const data = {
+				channelId: selectedChatData._id,
 				admin: selectedChatData.admin.toString(),
 				participants: selectedChatData.participants,
 				sender: userInfo._id,

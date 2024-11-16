@@ -64,7 +64,6 @@ export const fetchMyChannels = asyncHandler(async (req, res, next) => {
 					],
 				},
 			},
-
 			{
 				$lookup: {
 					from: 'messages',
@@ -73,18 +72,33 @@ export const fetchMyChannels = asyncHandler(async (req, res, next) => {
 					as: 'messageDetails',
 				},
 			},
-
+			{
+				$addFields: {
+					// Add a field for the latest message by sorting messages by timestamp
+					latestMessage: {
+						$arrayElemAt: [
+							{
+								$sortArray: {
+									input: '$messageDetails',
+									sortBy: { timestamps: -1 },
+								},
+							},
+							0,
+						],
+					},
+				},
+			},
 			{
 				$project: {
 					channelInfo: {
 						$mergeObjects: [
-							{ _id: '$id' },
+							{ _id: '$_id' },
 							{ admin: '$admin' },
 							{ participants: '$participants' },
 							{ title: '$title' },
 						],
 					},
-					latestMessage: { $arrayElemAt: ['$messageDetails', -1] },
+					latestMessage: 1,
 				},
 			},
 			{
@@ -96,6 +110,29 @@ export const fetchMyChannels = asyncHandler(async (req, res, next) => {
 			success: true,
 			message: 'Channel created successfully',
 			channels,
+		});
+	} catch (e) {
+		console.log('channel fetchin->>', e);
+		return next(new CustomError('Could not fetch Channels!', 500));
+	}
+});
+
+export const fetchChannelHistory = asyncHandler(async (req, res, next) => {
+	const { channelId } = req.body;
+
+	if (!channelId) {
+		return next(new CustomError('ChanelID is required!', 400));
+	}
+
+	try {
+		const channelHistory = await Channels.findById(channelId)
+			.select('messages, -_id')
+			.populate({ path: 'messages', populate: { path: 'sender' } });
+
+		res.status(200).json({
+			success: true,
+			message: 'Channel created successfully',
+			channelHistory: channelHistory?.messages,
 		});
 	} catch (e) {
 		console.log('channel fetchin->>', e);

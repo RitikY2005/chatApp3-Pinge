@@ -37,8 +37,16 @@ const handleDirectMessage = async (io, socket, msg) => {
 };
 
 const handleChannelMessage = async (io, socket, msg) => {
-	const { admin, sender, message, messageType, file, participants } = msg;
-	if (!admin || !sender || !messageType) {
+	const {
+		channelId,
+		admin,
+		sender,
+		message,
+		messageType,
+		file,
+		participants,
+	} = msg;
+	if (!channelId || !admin || !sender || !messageType) {
 		return socket.emit(
 			'custom_error',
 			'sender,receiver,message type are required!'
@@ -53,22 +61,28 @@ const handleChannelMessage = async (io, socket, msg) => {
 			file,
 		});
 
-		const channel = await Channels.updateOne(
-			{ admin },
-			{ $push: { messages: newMessage._id } }
-		);
+		const channel = await Channels.findByIdAndUpdate(channelId, {
+			$push: { messages: newMessage._id },
+		});
 
 		if (!channel) {
-			return socket.emit('custom_error', 'Channel was not found!');
+			return socket.emit('custom_error', 'channel not found!');
 		}
 
 		const finalMessage = await Messages.findById(newMessage._id).populate(
 			'sender'
 		);
 		// see if admin is online and emit the event to him , he won't be in participants array
+		const finalMessageData = {
+			channelId,
+			...finalMessage.toObject(),
+		};
 		const adminSocketId = connectedUsers.get(admin);
 		if (adminSocketId) {
-			io.to(adminSocketId).emit('channelMessageResponse', finalMessage);
+			io.to(adminSocketId).emit(
+				'channelMessageResponse',
+				finalMessageData
+			);
 		}
 
 		// whoever is online among participants , emit the message to them
@@ -77,7 +91,7 @@ const handleChannelMessage = async (io, socket, msg) => {
 			if (participantSocket) {
 				io.to(participantSocket).emit(
 					'channelMessageResponse',
-					finalMessage
+					finalMessageData
 				);
 			}
 		});
