@@ -14,6 +14,20 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
+
 import { SEND_FILE_ROUTE } from '@/constants/routes.constants.js';
 import { useToast } from '@/hooks/use-toast.js';
 import axiosInstance from '@/utils/axiosInstance.js';
@@ -258,7 +272,7 @@ function ChatFooter() {
 			</div>
 
 			{/*this is not part of static ui -> send file dialog*/}
-			<Dialog open={showFileDialog} onOpenChange={setShowFileDialog}>
+			{/*<Dialog open={showFileDialog} onOpenChange={setShowFileDialog}>
 				<DialogTrigger></DialogTrigger>
 				<DialogContent className="rounded-sm w-96">
 					<DialogHeader>
@@ -303,7 +317,60 @@ function ChatFooter() {
 						</DialogDescription>
 					</DialogHeader>
 				</DialogContent>
-			</Dialog>
+			</Dialog>*/}
+             
+             <AlertDialog open={showFileDialog} onOpenChange={setShowFileDialog}>
+  <AlertDialogTrigger></AlertDialogTrigger>
+  <AlertDialogContent className="rounded-sm w-96">
+    <AlertDialogHeader>
+      <AlertDialogTitle>Do you want to send this ?</AlertDialogTitle>
+     <AlertDialogDescription>
+        
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+    	 <span className="flex flex-col items-center justify-center p-3 gap-3 w-full">
+								{fileIsImage ? (
+									<img
+										src={filePreview}
+										alt="file preview"
+										className="w-48 drop-shadow-md"
+									/>
+								) : (
+									<span className="bg-primary text-primary-foreground p-1 rounded-md">
+										{filePreview}
+									</span>
+								)}
+
+								{isUploading > 0 && (
+									<span className="w-full">
+										<Progress value={isUploading} />
+									</span>
+								)}
+								<span className="flex items-center justify-center gap-3">
+									<button
+										onClick={handleCancelSendFile}
+										className="border border-destructive bg-destructive text-primary-foreground  rounded-lg py-2 px-4 text-md font-semibold transition-all duration-300 ease-in-out"
+									>
+										cancel
+									</button>
+									<button
+										onClick={handleSendFile}
+										disabled={
+											isUploading > 0 ? true : false
+										}
+										className="border border-accent bg-accent text-primary-foreground  rounded-lg py-2 px-4 text-md font-semibold transition-all duration-300 ease-in-out"
+									>
+										send
+									</button>
+								</span>
+							</span>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+
+
 			{/*till here is not part of ui */}
 		</div>
 	);

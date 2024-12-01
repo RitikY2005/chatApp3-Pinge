@@ -130,7 +130,7 @@ function ChatBody() {
 			>
 				{message.messageType === 'text' && (
 					<div
-						className={`${userInfo._id !== message.sender ? 'bg-secondary text-secondary-foreground rounded-bl-none' : 'bg-primary text-primary-foreground rounded-br-none'} border rounded-xl p-2 max-w-[50%] drop-shadow-sm`}
+						className={`${userInfo._id !== message.sender ? 'bg-secondary text-secondary-foreground rounded-bl-none' : 'bg-primary text-primary-foreground rounded-br-none'} border rounded-xl p-2 max-w-[50%] break-all drop-shadow-sm`}
 					>
 						{message.message}
 					</div>
@@ -190,7 +190,7 @@ function ChatBody() {
 			>
 				{message.messageType === 'text' && (
 					<div
-						className={`${userInfo._id !== message.sender._id ? 'bg-secondary text-secondary-foreground rounded-bl-none ml-6' : 'bg-primary text-primary-foreground rounded-br-none mr-6'} border rounded-xl p-2 max-w-[50%] drop-shadow-sm`}
+						className={`${userInfo._id !== message.sender._id ? 'bg-secondary text-secondary-foreground rounded-bl-none ml-6' : 'bg-primary text-primary-foreground rounded-br-none mr-6'} border break-all rounded-xl p-2 max-w-[50%] drop-shadow-sm`}
 					>
 						{message.message}
 					</div>
